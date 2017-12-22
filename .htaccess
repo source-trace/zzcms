@@ -106,6 +106,12 @@ RewriteRule wangkan/([0-9,a-z]*)$ wangkan/wangkan.php?b=$1
 RewriteRule wangkan/([0-9,a-z]*)/(\d*).htm$ wangkan/wangkan.php?b=$1&page=$2 
 RewriteRule wangkan/show-(\d*).htm$ wangkan/show.php?id=$1 
 
+RewriteRule ask/ask.htm$ ask/ask.php 
+RewriteRule ask/(\d*).htm$ ask/ask.php?page=$1 
+RewriteRule ask/([0-9,a-z]*)$ ask/ask.php?b=$1 
+RewriteRule ask/([0-9,a-z]*)/(\d*).htm$ ask/ask.php?b=$1&page=$2 
+RewriteRule ask/show-(\d*).htm$ ask/show.php?id=$1 
+
 RewriteRule zx/zx.htm$ zx/zx.php 
 RewriteRule zx/(\d*).htm$ zx/zx.php?page=$1 
 RewriteRule zx/(\d*)$ zx/zx.php?b=$1 

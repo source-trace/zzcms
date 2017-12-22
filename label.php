@@ -223,10 +223,10 @@ function baojiaclass($labelname){return labelclass($labelname,'baojia');}
 function askclass($labelname){return labelclass($labelname,'ask');}
 function specialclass($labelname){return labelclass($labelname,'special');}
 
-function writecache($channel,$classid,$labelname,$str){//$classid,$labelname 这两个参数在外部函数的参数里，没有在函数内部无法通过global获取到。
+function writecache($channel,$classzm,$labelname,$str){//$classid,$labelname 这两个参数在外部函数的参数里，没有在函数内部无法通过global获取到。
 global $siteskin,$provincezm;
-	if ($classid!='empty' && $classid!=''){
-	$fpath=zzcmsroot."cache/".$siteskin."/".$channel."/".$classid."-".$labelname.".txt";
+	if ($classzm!=''){
+	$fpath=zzcmsroot."cache/".$siteskin."/".$channel."/".$classzm."-".$labelname.".txt";
 	}elseif($provincezm<>''){//area.php中调用zs,dl,company三个频道中用到这个条件。
 	$fpath=zzcmsroot."cache/".$siteskin."/".$channel."/".$provincezm."-".$labelname.".txt";
 	}else{
@@ -268,7 +268,7 @@ $mids = str_replace($channel.".php?b={#classid}", "{#classid}",$mids);
 }
 $ends = $f[6];
 if ($channel=='zs' || $channel=='pp'|| $channel=='dl'|| $channel=='baojia'){
-$sql ="select classid,classname,classzm from zzcms_zsclass where parentid='A' order by xuhao limit $startnumber,$numbers ";
+$sql ="select classid,classname,classzm from zzcms_zsclass where parentid=0 order by xuhao limit $startnumber,$numbers ";
 }elseif($channel=='job'){
 $sql ="select * from zzcms_jobclass where parentid='0' order by xuhao limit $startnumber,$numbers ";
 }elseif($channel=="zh" || $channel=="link"|| $channel=="wangkan"){
@@ -382,10 +382,11 @@ return $str;
 }
 }
 
-function zsshow($labelname,$classid){
+function zsshow($labelname,$classzm){
 global $siteskin,$province,$provincezm;//取外部值，供演示模板，手机模板用
+setcookie("province","xxx",1);//搜索页的cookie值会影响到province的值
 if (!$siteskin){$siteskin=siteskin;}
-if ($classid!='empty' && $classid!=''){$fpath=zzcmsroot."cache/".$siteskin."/zs/".$classid."-".$labelname.".txt";
+if ($classzm!=''){$fpath=zzcmsroot."cache/".$siteskin."/zs/".$classzm."-".$labelname.".txt";
 }elseif($provincezm<>''){$fpath=zzcmsroot."cache/".$siteskin."/zs/".$provincezm."-".$labelname.".txt";
 }else{$fpath=zzcmsroot."cache/".$siteskin."/zs/".$labelname.".txt";}
 
@@ -397,21 +398,24 @@ if (file_exists($fpath)==true){
 if (filesize($fpath)<10){ showmsg(zzcmsroot."template/".$siteskin."/label/zsshow/".$labelname.".txt 内容为空");}//utf-8有文件头，空文件大小为3字节
 $fcontent=file_get_contents($fpath);
 $f=explode("|||",$fcontent) ;
-$title=$f[0];
-$bigclassid=$f[1];
-	if ($classid <> "") {//不为空的情况是嵌套在zsclass中时，接收的大类值。
-	$bigclassid = $classid; //使大类值等于接收到的值
-	$smallclassid = "empty"; //以下有条件判断，此处必设值
-	}else{
-	$bigclassid =$f[1];$smallclassid = $f[2];
+$title=$f[0];$bigclassid =$f[1];$smallclassid = $f[2];
+
+if ($classzm <> "") {//不为空的情况是嵌套在zsclass中时，接收的大类值。
+	$rs=query("select classid from zzcms_zsclass where classzm='".$classzm."'");
+	$row=fetch_array($rs);
+	if ($row){
+	$bigclassid=$row["classid"];//使大类值等于接收到的值
 	}
+	$smallclassid = 0; //以下有条件判断，此处必设值
+}
+
 $groupid =$f[3];$pic =$f[4];$flv =$f[5];$elite = $f[6];$numbers = $f[7];$orderby =$f[8];$titlenum = $f[9];$row = $f[10];$start =$f[11];$mids = $f[12];
 $mids = str_replace("show.php?id={#id}", "/zs/show.php?id={#id}",$mids);
 if (whtml == "Yes") {$mids = str_replace("/zs/show.php?id={#id}", "/zs/show-{#id}.htm",$mids);}
 $ends = $f[13];
-$sql = "select id,proname,bigclasszm,prouse,shuxing_value,sendtime,img,flv,hit,city,editor from zzcms_main where passed=1 ";
-	if ( $bigclassid <> "empty") {$sql = $sql . " and bigclasszm='" . $bigclassid . "'";}
-	if ( $smallclassid <> "empty") {$sql = $sql . " and smallclasszm='" . $smallclassid . "'";}
+$sql = "select id,proname,bigclassid,prouse,shuxing_value,sendtime,img,flv,hit,city,editor from zzcms_main where passed=1 ";
+	if ( $bigclassid <> 0) {$sql = $sql . " and bigclassid='" . $bigclassid . "'";}
+	if ( $smallclassid <> 0) {$sql = $sql . " and smallclassid='" . $smallclassid . "'";}
 	if ( $groupid <> 0) {$sql = $sql . " and groupid>=$groupid ";}    
 	if ( $pic == 1) {$sql = $sql . " and img is not null and img<>'/image/nopic.gif'";}
 	if ( $flv == 1) {$sql = $sql . " and flv is not null and flv<>'' ";} 	    
@@ -451,7 +455,7 @@ $mids2 = $mids2 . str_replace("{#hit}", $r["hit"],str_replace("{#n}", $n,str_rep
 	$mids2=str_replace("{#shuxing".$a."}",$shuxing_value[$a],$mids2);
 	}
 	
-	$mids2 =str_replace("{#bigclasszm}", $r["bigclasszm"],$mids2);//如排行页用来区分不同类别
+	$mids2 =str_replace("{#bigclasszm}", $r["bigclassid"],$mids2);//如排行页用来区分不同类别
 	//$mids2 =str_replace("{#tz}", $r["tz"],$mids2);
 	if ($n==1){$mids2=str_replace("display:none","",$mids2);}
 	if ($n<=3){
@@ -469,18 +473,18 @@ $xuhao++;
 $str = $start.$mids2.$ends;
 }
 if (cache_update_time!=0){
-writecache("zs",$classid,$labelname,$str);
+writecache("zs",$classzm,$labelname,$str);
 }	
 return $str;
 }//end if file_exists($fpath)==true
 }//end if (cache_update_time!=0 && file_exists($fpath)!==false && time()-filemtime($fpath)<3600*24*cache_update_time)
 }
 
-function ppshow($labelname,$classid){
+function ppshow($labelname,$classzm){
 global $siteskin;//取外部值，供演示模板用
 if (!$siteskin){$siteskin=siteskin;}
-if ($classid!='empty' && $classid!=''){
-$fpath=zzcmsroot."/cache/".$siteskin."/pp/".$classid."-".$labelname.".txt";
+if ($classzm!=""){
+$fpath=zzcmsroot."/cache/".$siteskin."/pp/".$classzm."-".$labelname.".txt";
 }else{
 $fpath=zzcmsroot."/cache/".$siteskin."/pp/".$labelname.".txt";
 }
@@ -492,21 +496,25 @@ if (file_exists($fpath)==true){
 if (filesize($fpath)<10){ showmsg(zzcmsroot."template/".$siteskin."/label/ppshow/".$labelname.".txt 内容为空");}//utf-8有文件头，空文件大小为3字节
 $fcontent=file_get_contents($fpath);
 $f=explode("|||",$fcontent) ;
-$title=$f[0];$bigclassid=$f[1];
-	if ($classid <> "") {//不为空的情况是嵌套在zsclass中时，接收的大类值。
-	$bigclassid = $classid; //使大类值等于接收到的值
-	$smallclassid = "empty"; //以下有条件判断，此处必设值
-	}else{
-	$bigclassid =$f[1];
-	$smallclassid = $f[2];
+$title=$f[0];
+$bigclassid=$f[1];$smallclassid = $f[2];
+
+if ($classzm <> "") {//不为空的情况是嵌套在zsclass中时，接收的大类值。
+	$rs=query("select classid from zzcms_zsclass where classzm='".$classzm."'");
+	$row=fetch_array($rs);
+	if ($row){
+	$bigclassid=$row["classid"];//使大类值等于接收到的值
 	}
+	$smallclassid = 0; //以下有条件判断，此处必设值
+}
+
 $pic =$f[3];$numbers = $f[4];$orderby =$f[5];$titlenum = $f[6];$row = $f[7];$start =$f[8];$mids = $f[9];
 $mids = str_replace("show.php?id={#id}", "/pp/show.php?id={#id}",$mids);
 if (whtml == "Yes") {$mids = str_replace("/pp/show.php?id={#id}", "/pp/show-{#id}.htm",$mids);}
 $ends = $f[10];
 $sql = "select id,ppname,sendtime,img,hit,editor from zzcms_pp where passed=1 ";
-	if ( $bigclassid <> "empty") {$sql = $sql . " and bigclasszm='" . $bigclassid . "'";}
-	if ( $smallclassid <> "empty") {$sql = $sql . " and smallclasszm='" . $smallclassid . "'";}
+	if ( $bigclassid <> 0) {$sql = $sql . " and bigclassid='" . $bigclassid . "'";}
+	if ( $smallclassid <> 0) {$sql = $sql . " and smallclassid='" . $smallclassid . "'";}
 	if ( $pic == 1) {$sql = $sql . " and img is not null and img<>'/image/nopic.gif'";}
 	if ( $orderby == "hit") {$sql = $sql . " order by hit desc limit 0,$numbers ";
 	}elseif ($orderby == "id") {$sql = $sql . " order by id desc limit 0,$numbers ";
@@ -541,7 +549,7 @@ $xuhao++;
 $str = $start.$mids2.$ends;
 }
 if (cache_update_time!=0){
-writecache("pp",$classid,$labelname,$str);	
+writecache("pp",$classzm,$labelname,$str);	
 }	
 return $str;
 }//end if file_exists($fpath)==true
@@ -620,11 +628,12 @@ return $str;
 }//end if (file_exists($fpath)!==false)
 }
 
-function dlshow($labelname,$classid){
+function dlshow($labelname,$classzm){
 global $siteskin,$province,$provincezm;//取外部值，供演示模板用,$province在area/show.php中已被转成了汉字，所以加了$provincezm
+setcookie("province","xxx",1);//搜索页的cookie值会影响到province的值
 if (!$siteskin){$siteskin=siteskin;}
-if ($classid!='empty' && $classid!=''){
-$fpath=zzcmsroot."/cache/".$siteskin."/dl/".$classid."-".$labelname.".txt";
+if ($classzm!=""){
+$fpath=zzcmsroot."/cache/".$siteskin."/dl/".$classzm."-".$labelname.".txt";
 }elseif($provincezm<>''){
 $fpath=zzcmsroot."/cache/".$siteskin."/dl/".$provincezm."-".$labelname.".txt";
 }else{
@@ -638,52 +647,42 @@ if (file_exists($fpath)==true){
 if (filesize($fpath)<10){ showmsg(zzcmsroot."template/".$siteskin."/label/dlshow/".$labelname.".txt 内容为空");}//utf-8有文件头，空文件大小为3字节
 $fcontent=file_get_contents($fpath);
 $f=explode("|||",$fcontent) ;
-$title=$f[0];
-if ($classid <> "") {
-$b = $classid;
-}else{
-$b = $f[1];
+$title=$f[0];$b = $f[1];
+
+if ($classzm <> "") {//不为空的情况是嵌套在zsclass中时，接收的大类值。
+	$rs=query("select classid from zzcms_zsclass where classzm='".$classzm."'");
+	$row=fetch_array($rs);
+	if ($row){
+	$b=$row["classid"];//使大类值等于接收到的值
+	}
 }
+
 $saver = $f[2];$numbers = $f[3];$orderby =$f[4];$titlenum = $f[5];$column = $f[6];$start =$f[7];$mids = $f[8];
 $mids = str_replace("show.php?id={#id}", "/dl/show.php?id={#id}",$mids);
 if (whtml == "Yes") {$mids = str_replace("/dl/show.php?id={#id}", "/dl/show-{#id}.htm",$mids);}
 $ends = $f[9];
 
-if ( $b <> "empty") {
-$sql="select count(*) as total from zzcms_dl_".$b." where passed<>0 ";
-}else{
-$sql="select count(*) as total from zzcms_dl where passed<>0 ";	
-}
 $sql2='';
-	if ($saver==1){$sql2 = $sql2 . " and saver is not null ";}
-	if ( $province !='') {$sql2 = $sql2 . " and province='$province' ";}
-	if ( $orderby == "hit") {$sql3 = " order by hit desc";
-	}elseif ($orderby == "id") {$sql3 = " order by id desc";
-	}elseif ($orderby == "sendtime") {$sql3 = " order by sendtime desc";}
-	$sql4 = " limit 0,$numbers ";	
+if ($saver==1){$sql2 = $sql2 . " and saver is not null ";}
+//if ( $province !='') {$sql2 = $sql2 . " and province='$province' ";}
+if ( $orderby == "hit") {$sql3 = " order by hit desc";
+}elseif ($orderby == "id") {$sql3 = " order by id desc";
+}elseif ($orderby == "sendtime") {$sql3 = " order by sendtime desc";}
+$sql4 = " limit 0,$numbers ";	
 
-$rs = query($sql.$sql2.$sql4);
-//echo  $sql.$sql2.$sql4;
-$row = fetch_array($rs);
-$totlenum = $row['total'];
-if ( $b <> "empty") {
-$sql = "select id,dlid,cp,sendtime,editor,dlsname,city,saver,tel from zzcms_dl_".$b." where passed<>0 ";
+if ( $b <> 0) {
+$sql = "select id,cp,sendtime,editor,dlsname,city,saver,tel from zzcms_dl where classid=$b ";
 }else{
 $sql = "select id,cp,sendtime,editor,dlsname,city,saver,tel from zzcms_dl where passed<>0 ";
 }
 $rs=query($sql.$sql2.$sql3.$sql4);
 //echo $sql.$sql2.$sql3.$sql4;
-if (!$totlenum){
 $str="暂无信息";
-}else{
+if ($rs){
 $xuhao = 1;$n = 1;$mids2='';
 while($row=fetch_array($rs)){
 	$mids2 = $mids2 . str_replace("{#name}", $row["dlsname"],str_replace("{#n}", $n,str_replace("{#sendtime}", date("Y-m-d",strtotime($row['sendtime'])),str_replace("{#cp}",cutstr($row["cp"],$titlenum),$mids))));
-	if ( $b <> "empty") {
-	$mids2=str_replace("{#id}",$row['dlid'],$mids2);
-	}else{
 	$mids2=str_replace("{#id}",$row['id'],$mids2);
-	}
 	$mids2=str_replace("{#mobile}",str_replace(substr($row['tel'],3,4),"****",$row['tel']),$mids2);
 	if (strpos($mids,'{#companyname}')!==false || strpos($mids,'{#companyimg}')!==false || strpos($mids,'{#companyimgbig}')!==false){
 		$sqln = "select id,username,img,comane from zzcms_user where username='".$row['saver']."' ";
@@ -723,18 +722,18 @@ $xuhao++;
 $str = $start.$mids2.$ends;
 }//end if (!$totlenum)
 if (cache_update_time!=0){
-writecache("dl",$classid,$labelname,$str);
+writecache("dl",$classzm,$labelname,$str);
 }
 return $str;
 }//end if file_exists($fpath)==true
 }//end if (file_exists($fpath)!==false)
 }
 
-function baojiashow($labelname,$classid){
+function baojiashow($labelname,$classzm){
 global $siteskin,$province,$provincezm;//取外部值，供演示模板用,$province在area/show.php中已被转成了汉字，所以加了$provincezm
 if (!$siteskin){$siteskin=siteskin;}
-if ($classid!='empty' && $classid!=''){
-$fpath=zzcmsroot."/cache/".$siteskin."/baojia/".$classid."-".$labelname.".txt";
+if ($classzm!=""){
+$fpath=zzcmsroot."/cache/".$siteskin."/baojia/".$classzm."-".$labelname.".txt";
 }elseif($provincezm<>''){
 $fpath=zzcmsroot."/cache/".$siteskin."/baojia/".$provincezm."-".$labelname.".txt";
 }else{
@@ -748,12 +747,16 @@ if (file_exists($fpath)==true){
 if (filesize($fpath)<10){ showmsg(zzcmsroot."template/".$siteskin."/label/baojiashow/".$labelname.".txt 内容为空");}//utf-8有文件头，空文件大小为3字节
 $fcontent=file_get_contents($fpath);
 $f=explode("|||",$fcontent) ;
-$title=$f[0];
-if ($classid <> "") {
-$b = $classid;
-}else{
-$b = $f[1];
+$title=$f[0];$b = $f[1];
+
+if ($classzm <> "") {//不为空的情况是嵌套在zsclass中时，接收的大类值。
+	$rs=query("select classid from zzcms_zsclass where classzm='".$classzm."'");
+	$row=fetch_array($rs);
+	if ($row){
+	$b=$row["classid"];//使大类值等于接收到的值
+	}
 }
+
 $numbers = $f[2];$orderby =$f[3];$titlenum = $f[4];$column = $f[5];$start =$f[6];$mids = $f[7];
 $mids = str_replace("show.php?id={#id}", "/baojia/show.php?id={#id}",$mids);
 if (whtml == "Yes") {$mids = str_replace("/baojia/show.php?id={#id}", "/baojia/show-{#id}.htm",$mids);}
@@ -762,13 +765,13 @@ $ends = $f[8];
 $sql="select count(*) as total from zzcms_baojia where passed<>0 ";	
 $sql2='';
 	if ( $province !='') {$sql2 = $sql2 . " and province='$province' ";}
-	if ( $b !='empty') {$sql2 = $sql2 . " and classzm='$b' ";}
+	if ( $b !=0) {$sql2 = $sql2 . " and classid='$b' ";}
 	if ( $orderby == "hit") {$sql3 = " order by hit desc";
 	}elseif ($orderby == "id") {$sql3 = " order by id desc";
 	}elseif ($orderby == "sendtime") {$sql3 = " order by sendtime desc";}
 	$sql4 = " limit 0,$numbers ";	
 
-$rs = query($sql.$sql2.$sql4);
+$rs =query($sql.$sql2.$sql4);
 //echo  $sql.$sql2.$sql4."<br>";
 $row = fetch_array($rs);
 $totlenum = $row['total'];
@@ -803,7 +806,7 @@ $xuhao++;
 $str = $start.$mids2.$ends;
 }//end if (!$totlenum)
 if (cache_update_time!=0){
-writecache("baojia",$classid,$labelname,$str);
+writecache("baojia",$classzm,$labelname,$str);
 }
 return $str;
 }//end if file_exists($fpath)==true
@@ -1133,8 +1136,8 @@ if ($b<>'' && is_numeric($b)==false){//接收的zsclass大类值
 	if ($bid == 0) {//当大类为0时，取所有显示大类的信息
 	$sql = $sql . "and bigclassid in (select classid from zzcms_zxclass where isshowininfo=1 and parentid=0) ";
 	}else{
-    	if ($bid <> 0) {$sql = $sql . " and bigclassid=".$bid."";}
-    	if ($sid <> 0) {$sql = $sql . " and smallclassid=".$sid."";}
+    	if ($bid <> 0) {$sql = $sql . " and bigclassid='".$bid."'";}
+    	if ($sid <> 0) {$sql = $sql . " and smallclassid='".$sid."'";}
 	}
 }	
  	if ($pic == 1) {$sql = $sql . " and img is not null and img <>''";}
@@ -1485,7 +1488,7 @@ while($r=fetch_array($rs)){
 	}
 	$mids2=str_replace("{#sendtime}", date("Y-m-d",strtotime($r['sendtime'])),$mids2);
 	if ($cnum==0){
-	$mids2=str_replace("{#content}",$r["content"],$mids2);
+	$mids2=str_replace("{#content}",stripfxg($r["content"],true),$mids2);
 	}else{
 	$mids2=str_replace("{#content}", cutstr(nohtml($r["content"]),$cnum),$mids2);
 	}
@@ -1684,7 +1687,7 @@ $mids2 ='';
 $n = 1;
 while($r=fetch_array($rs)){
 	$mids2 = $mids2 . str_replace("{#title}",cutstr($r["title"],$titlenum),$mids);
-	$mids2=str_replace("{#content}", cutstr($r["content"],$contentnum),$mids2);
+	$mids2=str_replace("{#content}", cutstr(stripfxg($r["content"],true),$contentnum),$mids2);
 	if ( $row <> "" && $row >0) {
 		if ( $n % $row == 0) {$mids2 = $mids2 . "</tr>";}
 	}

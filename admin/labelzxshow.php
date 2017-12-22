@@ -7,42 +7,23 @@ include("admin.php");
 <link href="style.css" rel="stylesheet" type="text/css">
 <title></title>
 <?php
-if (isset($_REQUEST['action'])){
-$action=$_REQUEST['action'];
-}else{
-$action="";
-}
+$action = isset($_REQUEST['action'])?$_REQUEST['action']:"";
 if ($action=="add") {
 checkadminisdo("label");
 $title=nostr(trim($_POST["title"]));
-$title_old=trim($_POST["title_old"]);
-$bigclassid=trim($_POST["bigclassid"]);
-$smallclassid=trim($_POST["smallclassid"]);
-
-if(!empty($_POST['pic'])){
-    $pic=$_POST['pic'][0];
-}else{
-$pic=0;
-}
-
-if(!empty($_POST['elite'])){
-    $elite=$_POST['elite'][0];
-}else{
-$elite=0;
-}
-
-$numbers=trim($_POST["numbers"]);
-$orderby=trim($_POST["orderby"]);
-$titlenum=trim($_POST["titlenum"]);
-$cnum=trim($_POST["cnum"]);
-$row=trim($_POST["row"]);
-$start=stripfxg($_POST["start"]);
-$mids=stripfxg($_POST["mids"]);
-$ends=stripfxg($_POST["ends"]);
+$pic = isset($_POST['pic'])?$_POST['pic'][0]:0;
+$elite = isset($_POST['elite'])?$_POST['elite'][0]:0;
+checkstr($numbers,'num','调用记录数');
+checkstr($titlenum,'num','标题长度');
+checkstr($cnum,'num','内容长度');
+checkstr($column,'num','列数');
+$start=stripfxg($_POST["start"],true);
+$mids=stripfxg($_POST["mids"],true);
+$ends=stripfxg($_POST["ends"],true);
 
 $f="../template/".siteskin."/label/zxshow/".$title.".txt";
 $fp=fopen($f,"w+");//fopen()的其它开关请参看相关函数
-$str=$title . "|||" .$bigclassid . "|||".$smallclassid . "|||".$pic ."|||".$elite . "|||" . $numbers . "|||" . $orderby ."|||" . $titlenum ."|||" . $cnum ."|||" . $row . "|||" . $start . "|||" . $mids . "|||" . $ends;
+$str=$title . "|||" .$bigclassid . "|||".$smallclassid . "|||".$pic ."|||".$elite . "|||" . $numbers . "|||" . $orderby ."|||" . $titlenum ."|||" . $cnum ."|||" . $column . "|||" . $start . "|||" . $mids . "|||" . $ends;
 fputs($fp,$str);
 fclose($fp);
 $title==$title_old ?$msg='修改成功':$msg='添加成功';
@@ -59,7 +40,7 @@ $f="../template/".siteskin."/label/zxshow/".nostr(trim($_POST["title"])).".txt";
 	}	
 }
 
-$sql = "select * from zzcms_zxclass order by classid asc";
+$sql = "select parentid,classid,classname from zzcms_zxclass order by classid asc";
 $rs=query($sql);
 ?>
 <script language = "JavaScript">
@@ -76,8 +57,7 @@ subcat[<?php echo $count?>] = new Array("<?php echo trim($r['classname'])?>","<?
         ?>
 onecount=<?php echo $count?>;
 
-function changelocation(locationid)
-    {
+function changelocation(locationid){
     document.myform.smallclassid.length = 1; 
     var locationid=locationid;
     var i;
@@ -107,29 +87,6 @@ if (document.myform.bigclassid.value==""){
 	document.myform.bigclassid.focus();
 	return false;
   } 
-//定义正则表达式部分
-var strP=/^\d+$/;
-if(!strP.test(document.myform.numbers.value)) {
-alert("只能填数字！"); 
-document.myform.numbers.focus(); 
-return false; 
-} 
-
-if(!strP.test(document.myform.titlenum.value)) {
-alert("只能填数字！"); 
-document.myform.titlenum.focus(); 
-return false; 
-}  
-if(!strP.test(document.myform.cnum.value)) {
-alert("只能填数字！"); 
-document.myform.cnum.focus(); 
-return false; 
-} 
-if(!strP.test(document.myform.row.value)) {
-alert("只能填数字！"); 
-document.myform.row.focus(); 
-return false; 
-}  
 }  
 </script>
 </head>
@@ -186,24 +143,10 @@ $numbers=$f[5];
 $orderby=$f[6];
 $titlenum=$f[7];
 $cnum=$f[8];
-$row=$f[9];
+$column=$f[9];
 $start=$f[10];
 $mids=$f[11];
 $ends=$f[12];	
-}else{
-$title="";
-$bigclassid="";
-$smallclassid="";
-$pic="";
-$elite="";
-$numbers="";
-$orderby="";
-$titlenum="";
-$cnum="";
-$row="";
-$start="";
-$mids="";
-$ends="";
 } 
 	   ?>
 	   </div>      </td>
@@ -219,7 +162,7 @@ $ends="";
       <td class="border" > <select name="bigclassid" onChange="changelocation(document.myform.bigclassid.options[document.myform.bigclassid.selectedIndex].value)" size="1">
           <option value="empty" selected>不指定大类</option>
           <?php
-       $sql = "select * from zzcms_zxclass where parentid=0 order by xuhao asc";
+       $sql = "select classid,classname from zzcms_zxclass where parentid=0 order by xuhao asc";
        $rs=query($sql);
 		   while($r=fetch_array($rs)){
 			?>
@@ -231,7 +174,7 @@ $ends="";
         </select> <select name="smallclassid">
           <option value="empty" selected>不指定小类</option>
           <?php if ($bigclassid<>"empty" && $bigclassid<>""){
-			$sql="select * from zzcms_zxclass where parentid=" . $bigclassid ." order by classid asc";
+			$sql="select classid,classname from zzcms_zxclass where parentid='" . $bigclassid ."' order by classid asc";
 			$rs=query($sql);
 			while($r=fetch_array($rs)){
 			?>
@@ -267,7 +210,7 @@ $ends="";
     </tr>
     <tr> 
       <td align="right" class="border" >列数：</td>
-      <td class="border" > <input name="row" type="text" id="row" value="<?php echo $row?>" size="20" maxlength="255">
+      <td class="border" > <input name="column" type="text" id="column" value="<?php echo $column?>" size="20" maxlength="255">
         （分几列显示）</td>
     </tr>
     <tr> 
@@ -288,7 +231,6 @@ $ends="";
         <input type="submit" name="Submit2" value="删除选中的标签" onClick="myform.action='?action=del'"></td>
     </tr>
   </table>
-</form>
-		  
+</form>		  
 </body>
 </html>

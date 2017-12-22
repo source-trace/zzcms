@@ -7,29 +7,22 @@ include("admin.php");
 <link href="style.css" rel="stylesheet" type="text/css">
 <title></title>
 <?php
-
-if (isset($_REQUEST['action'])){
-$action=$_REQUEST['action'];
-}else{
-$action="";
-}
+$action = isset($_REQUEST['action'])?$_REQUEST['action']:"";
 if ($action=="add") {
 checkadminisdo("label");
-$title=trim($_POST["title"]);
-$title_old=trim($_POST["title_old"]);
-$id=trim($_POST["id"]);
 
-$contentnum=trim($_POST["contentnum"]);
-$titlenum=trim($_POST["titlenum"]);
-$row=trim($_POST["row"]);
-$start=stripfxg($_POST["start"]);
-$mids=stripfxg($_POST["mids"]);
-$ends=stripfxg($_POST["ends"]);
+checkstr($contentnum,'num','内容长度');
+checkstr($titlenum,'num','标题长度');
+checkstr($column,'num','列数');
+
+$start=stripfxg($_POST["start"],true);
+$mids=stripfxg($_POST["mids"],true);
+$ends=stripfxg($_POST["ends"],true);
 
 if (!file_exists("../template/".siteskin."/label/aboutshow")) {mkdir("../template/".siteskin."/label/aboutshow",0777,true);}
 $f="../template/".siteskin."/label/aboutshow/".$title.".txt";
 $fp=fopen($f,"w+");//fopen()的其它开关请参看相关函数
-$str=$title . "|||" .$id . "|||" . $titlenum . "|||" . $contentnum ."|||" . $row . "|||" . $start . "|||" . $mids . "|||" . $ends;
+$str=$title . "|||" .$id . "|||" . $titlenum . "|||" . $contentnum ."|||" . $column . "|||" . $start . "|||" . $mids . "|||" . $ends;
 fputs($fp,$str);
 fclose($fp);
 $title==$title_old ?$msg='修改成功':$msg='添加成功';
@@ -38,15 +31,13 @@ echo "<script>alert('".$msg."');location.href='?labelname=".$title.".txt'</scrip
 
 if ($action=="del") {
 checkadminisdo("label");
-$f="../template/".siteskin."/label/aboutshow/".nostr(trim($_POST["title"])).".txt";
+$f="../template/".siteskin."/label/aboutshow/".nostr($_POST["title"]).".txt";
 	if (file_exists($f)){
 	unlink($f);
 	}else{
 	echo "<script>alert('请选择要删除的标签');history.back()</script>";
 	}	
 }
-
-
 ?>
 <script language = "JavaScript">
 function CheckForm(){
@@ -66,25 +57,6 @@ if (document.myform.id.value==""){
 	document.myform.id.focus();
 	return false;
   } 
-//定义正则表达式部分
-var strP=/^\d+$/;
-if(!strP.test(document.myform.contentnum.value)) {
-alert("只能填数字！"); 
-document.myform.contentnum.focus(); 
-return false; 
-} 
-
-if(!strP.test(document.myform.titlenum.value)) {
-alert("只能填数字！"); 
-document.myform.titlenum.focus(); 
-return false; 
-}  
-
-if(!strP.test(document.myform.row.value)) {
-alert("只能填数字！"); 
-document.myform.row.focus(); 
-return false; 
-}  
 }  
 </script>
 </head>
@@ -124,32 +96,12 @@ closedir($dir);
 //读取现有标签中的内容
 if ($labelname!=''){
 $fp="../template/".siteskin."/label/aboutshow/".$labelname;
-$f=fopen($fp,"r+");
-$fcontent="";
-while (!feof($f))
-{
-    $fcontent=$fcontent.fgets($f);
-}
+$f=fopen($fp,"r");
+$fcontent=fread($f,filesize($fp));
 fclose($f);
 $fcontent=removeBOM($fcontent);//去除BOM信息，使修改时不用再重写标签名
 $f=explode("|||",$fcontent) ;
-$title=$f[0];
-$id=$f[1];
-$titlenum=$f[2];
-$contentnum=$f[3];
-$row=$f[4];
-$start=$f[5];
-$mids=$f[6];
-$ends=$f[7];	
-}else{
-$title="";
-$id=0;
-$titlenum="";
-$contentnum="";
-$row="";
-$start="";
-$mids="";
-$ends="";
+$title=$f[0];$id=$f[1];$titlenum=$f[2];$contentnum=$f[3];$column=$f[4];$start=$f[5];$mids=$f[6];$ends=$f[7];	
 } 
 	   ?>
 </div>      </td>
@@ -187,7 +139,7 @@ $ends="";
     </tr>
     <tr> 
       <td align="right" class="border" >列数：</td>
-      <td class="border" > <input name="row" type="text" id="row" value="<?php echo $row?>" size="20" maxlength="255">
+      <td class="border" > <input name="column" type="text" id="column" value="<?php echo $column?>" size="20" maxlength="255">
         （分几列显示）</td>
     </tr>
     <tr> 

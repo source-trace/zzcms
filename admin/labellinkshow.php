@@ -7,39 +7,24 @@ include("admin.php");
 <link href="style.css" rel="stylesheet" type="text/css">
 <title></title>
 <?php
-
-if (isset($_REQUEST['action'])){
-$action=$_REQUEST['action'];
-}else{
-$action="";
-}
+$action = isset($_REQUEST['action'])?$_REQUEST['action']:"";
 if ($action=="add") {
 checkadminisdo("label");
 $title=nostr(trim($_POST["title"]));
-$title_old=trim($_POST["title_old"]);
-$bigclassid=trim($_POST["bigclassid"]);
-if(!empty($_POST['pic'])){
-    $pic=$_POST['pic'][0];
-}else{
-$pic=0;
-}
 
-if(!empty($_POST['elite'])){
-    $elite=$_POST['elite'][0];
-}else{
-$elite=0;
-}
+$pic = isset($_POST['pic'])?$_POST['pic'][0]:0;
+$elite = isset($_POST['elite'])?$_POST['elite'][0]:0;
+checkstr($numbers,'num','调用记录数');
+checkstr($titlenum,'num','标题长度');
+checkstr($column,'num','列数');
 
-$numbers=trim($_POST["numbers"]);
-$titlenum=trim($_POST["titlenum"]);
-$row=trim($_POST["row"]);
-$start=stripfxg($_POST["start"]);
-$mids=stripfxg($_POST["mids"]);
-$ends=stripfxg($_POST["ends"]);
+$start=stripfxg($_POST["start"],true);
+$mids=stripfxg($_POST["mids"],true);
+$ends=stripfxg($_POST["ends"],true);
 
 $f="../template/".siteskin."/label/linkshow/".$title.".txt";
 $fp=fopen($f,"w+");//fopen()的其它开关请参看相关函数
-$str=$title . "|||" .$bigclassid . "|||".$pic ."|||".$elite . "|||" . $numbers . "|||" . $titlenum ."|||" . $row . "|||" . $start . "|||" . $mids . "|||" . $ends;
+$str=$title . "|||" .$bigclassid . "|||".$pic ."|||".$elite . "|||" . $numbers . "|||" . $titlenum ."|||" . $column . "|||" . $start . "|||" . $mids . "|||" . $ends;
 fputs($fp,$str);
 fclose($fp);
 $title==$title_old ?$msg='修改成功':$msg='添加成功';
@@ -48,19 +33,16 @@ echo "<script>alert('".$msg."');location.href='?labelname=".$title.".txt'</scrip
 
 if ($action=="del") {
 checkadminisdo("label");
-$f="../template/".siteskin."/label/linkshow/".nostr(trim($_POST["title"])).".txt";
+$f="../template/".siteskin."/label/linkshow/".nostr($_POST["title"]).".txt";
 	if (file_exists($f)){
 	unlink($f);
 	}else{
 	echo "<script>alert('请选择要删除的标签');history.back()</script>";
 	}	
 }
-
-
 ?>
 <script language = "JavaScript">
-function CheckForm()
-{
+function CheckForm(){
 var re=/^[0-9a-zA-Z_]{1,20}$/; //只输入数字和字母的正则
 if (document.myform.title.value=="")
   {
@@ -79,42 +61,12 @@ if (document.myform.bigclassid.value=="")
 	document.myform.bigclassid.focus();
 	return false;
   } 
-//定义正则表达式部分
-var strP=/^\d+$/;
-if(!strP.test(document.myform.numbers.value)) 
-{
-alert("只能填数字！"); 
-document.myform.numbers.focus(); 
-return false; 
-} 
-
-if(!strP.test(document.myform.titlenum.value)) 
-{
-alert("只能填数字！"); 
-document.myform.titlenum.focus(); 
-return false; 
 }  
-
-if(!strP.test(document.myform.row.value)) 
-{
-alert("只能填数字！"); 
-document.myform.row.focus(); 
-return false; 
-}  
-
-}  
-
-	</script>
+</script>
 </head>
-
 <body>
-<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
-  <tr> 
-    <td class="admintitle">友情链接内容标签</td>
-  </tr>
-</table>
-<form action="" method="post" name="myform" id="myform" onSubmit="return CheckForm();">
-        
+<div class="admintitle">友情链接内容标签</div>
+<form action="" method="post" name="myform" id="myform" onSubmit="return CheckForm();">       
   <table width="100%" border="0" cellpadding="5" cellspacing="0">
     <tr> 
       <td width="150" align="right" class="border" >现有标签：</td>
@@ -147,12 +99,8 @@ closedir($dir);
 //读取现有标签中的内容
 if ($labelname!=''){
 $fp="../template/".siteskin."/label/linkshow/".$labelname;
-$f=fopen($fp,"r+");
-$fcontent="";
-while (!feof($f))
-{
-    $fcontent=$fcontent.fgets($f);
-}
+$f=fopen($fp,"r");
+$fcontent=fread($f,filesize($fp));
 fclose($f);
 $fcontent=removeBOM($fcontent);//去除BOM信息，使修改时不用再重写标签名
 $f=explode("|||",$fcontent) ;
@@ -162,21 +110,10 @@ $pic=$f[2];
 $elite=$f[3];
 $numbers=$f[4];
 $titlenum=$f[5];
-$row=$f[6];
+$column=$f[6];
 $start=$f[7];
 $mids=$f[8];
 $ends=$f[9];	
-}else{
-$title="";
-$bigclassid="";
-$pic="";
-$elite="";
-$numbers="";
-$titlenum="";
-$row="";
-$start="";
-$mids="";
-$ends="";
 } 
 	   ?>
 </div>	   
@@ -193,7 +130,7 @@ $ends="";
       <td class="border" > <select name="bigclassid">
           <option value="empty" selected>不指定大类</option>
           <?php
-       $sql = "select * from zzcms_linkclass order by xuhao asc";
+       $sql = "select bigclassid,bigclassname from zzcms_linkclass order by xuhao asc";
        $rs=query($sql);
 		   while($r=fetch_array($rs)){
 			?>
@@ -218,7 +155,7 @@ $ends="";
     </tr>
     <tr> 
       <td align="right" class="border" >列数：</td>
-      <td class="border" > <input name="row" type="text" id="row" value="<?php echo $row?>" size="20" maxlength="255">
+      <td class="border" > <input name="column" type="text" id="column" value="<?php echo $column?>" size="20" maxlength="255">
         （分几列显示）</td>
     </tr>
     <tr> 
@@ -240,7 +177,6 @@ $ends="";
         <input type="submit" name="Submit2" value="删除选中的标签" onClick="myform.action='?action=del'"></td>
     </tr>
   </table>
-      </form>
-		  
+      </form>	  
 </body>
 </html>

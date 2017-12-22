@@ -20,43 +20,21 @@ setcookie("page_size_zh",$page_size,time()+3600*24*360);
 	$page_size=pagesize_qt;
 	}
 }
-if (isset($_GET['keyword'])){
-$keyword=trim($_GET['keyword']);
-}else{
-$keyword="";
-}
+$keyword=isset($_GET['keyword'])?$_GET['keyword']:'';
+$province=isset($_GET['province'])?$_GET['province']:'';
+$sj=isset($_GET['sj'])?$_GET['sj']:'';
+if ($sj<>"") {checkid($sj);}
+$b=isset($_GET['b'])?$_GET['b']:0;
+checkid($b,1);
 
-if (isset($_GET['province'])){
-$province=trim($_GET['province']);
-}else{
-$province="";
-}
-
-if (isset($_GET['sj'])){
-$sj=trim($_GET['sj']);
-}else{
-$sj="";
-}
-if ($sj<>"") {
-checkid($sj);
-}
-
-if (isset($_GET['b'])){
-$b=trim($_GET['b']);
-}else{
-$b="";
-}
-
-if ($b<>""){
-checkid($b);
-$sql="select * from zzcms_zhclass where bigclassid=".$b." ";
+$bigclassname="";
+if ($b<>0){
+$sql="select bigclassname from zzcms_zhclass where bigclassid='".$b."' ";
 $rs=query($sql);
 $row=fetch_array($rs);
 if ($row){
 $bigclassname=$row["bigclassname"];
 }
-}else{
-$bigclassname="";
 }
 
 $pagetitle=sitename.zhlisttitle;
@@ -64,7 +42,7 @@ $pagekeyword=sitename.zhlistkeyword;
 $pagedescription=sitename.zhlistdescription;
 
 function formbigclass($b){
-$sql = "select * from zzcms_zhclass  ";
+$sql = "select bigclassid,bigclassname from zzcms_zhclass  ";
 $rs=query($sql);
 $row=num_rows($rs);
 if (!$row){
@@ -121,12 +99,11 @@ if ($sj<>""){
 $sql2=$sql2." and month(timestart) ='".$sj."' ";	
 }	
 
-if ($b<>""){
+if ($b<>0){
 $sql2=$sql2." and bigclassid ='".$b."' ";
 }
 
-if( isset($_GET["page"]) && $_GET["page"]!="") 
-{
+if( isset($_GET["page"]) && $_GET["page"]!="") {
     $page=$_GET['page'];
 	checkid($page);
 }else{
@@ -134,7 +111,7 @@ if( isset($_GET["page"]) && $_GET["page"]!="")
 }
 $list=strbetween($strout,"{loop}","{/loop}");
 
-$rs = query($sql.$sql2); 
+$rs =query($sql.$sql2); 
 $row = fetch_array($rs);
 $totlenum = $row['total'];
 $offset=($page-1)*$page_size;//$page_size在上面被设为COOKIESS

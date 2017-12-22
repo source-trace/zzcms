@@ -5,6 +5,7 @@ $_SESSION['dlliuyan']='';
 $rs=query("select config from zzcms_usergroup where groupid=$groupid");
 $row=fetch_array($rs);
 $showcontact=str_is_inarr($row["config"],'showcontact');
+
 $siteleft="<div class='titleleft'>联系人</div>";
 $siteleft=$siteleft."<div class='contentleft'>";
 if ($showcontact=="yes" || $_SESSION["dlliuyan"]==$editor) {
@@ -40,25 +41,18 @@ $siteleft=$siteleft. "</ul>";
 
 $siteleft=$siteleft. "</div>";
 //以下显示招商分类
-if (isset($_REQUEST['bigclass'])){
-$bigclass=$_REQUEST['bigclass'];
-}else{
-$bigclass="";
-}
 
-if (isset($_REQUEST['smallclass'])){
-$smallclass=$_REQUEST['smallclass'];
-}else{
-$smallclass="";
-}
+$bigclass = isset($_REQUEST['bigclass'])?$_REQUEST['bigclass']:"A";//空参数web.config规则不支持，这里用了0
+$smallclass = isset($_REQUEST['smallclass'])?$_REQUEST['smallclass']:"A";
+
 $siteleft=$siteleft. "<div class='titleleft'>分类".channelzs."</div>";
 
 $siteleft=$siteleft. "<div class='contentleft'>";
-$rsleft=query("select bigclasszm from zzcms_main where editor='".$editor."'and bigclasszm<>'' group by bigclasszm");
+$rsleft=query("select bigclassid from zzcms_main where editor='".$editor."'and bigclassid<>0 group by bigclassid");
 $rowleft=num_rows($rsleft);
 if ($rowleft){
 	while ($rowleft=fetch_array($rsleft)){
-		$rsb=query("select classname from zzcms_zsclass where classzm='".$rowleft["bigclasszm"]."'");
+		$rsb=query("select classname,classzm from zzcms_zsclass where classid='".$rowleft["bigclassid"]."'");
 		$rowb=num_rows($rsb);
 		if ($rowb){
 		$rowb=fetch_array($rsb);
@@ -67,7 +61,7 @@ if ($rowleft){
 		$bigclassnames="大类已删除";
 		}
 		
-		$rsb=query("select count(id) from zzcms_main where editor='".$editor."'and bigclasszm='".$rowleft["bigclasszm"]."'");
+		$rsb=query("select count(id) from zzcms_main where editor='".$editor."'and bigclassid='".$rowleft["bigclassid"]."'");
 		$numb=mysql_result($rsb,0);
 		
 		$siteleft=$siteleft."<li style='font-weight:bold'>";
@@ -119,6 +113,9 @@ if ($rowleft){
 				}
 				
 				$rss=query("select count(id) from zzcms_main where editor='".$editor."'and smallclasszm='".$rown["classzm"]."'");
+				$rows = mysqli_fetch_assoc($rss);
+				$nums = $rows['total']
+				
 				$nums=mysql_result($rss,0);
 		
 				$siteleft=$siteleft."<li style='list-style:none;'>";

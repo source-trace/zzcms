@@ -31,13 +31,18 @@ $sql=$sql." order by groupid desc,elite desc,".$px." desc limit $last,$amount";
 $rs = query($sql); 
 while($row= fetch_array($rs)){
 
+	if (showdlinzs=="Yes") {
+	$rsn=query("select id from zzcms_dl where saver='".$row["editor"]."' and passed=1");
+	$dl_num=num_rows($rsn);
+	}
 
  $sayList[] = array(
     'title' => "<a href='".getpageurl("zs",$row["id"])."' class='bigbigword2'>".$row['proname']."</a>",
     'img' => "<img src='".getsmallimg($row["img"])."' onload='resizeimg(90,90,this)'>",
     'prouse' => cutstr($row['prouse'],40),
 	'companyname' => "<a href='".getpageurlzt($row["editor"],$row["userid"])."' target='_blank'>".$row["comane"]."</a>",
-	'city' => $row["province"].$row["city"]
+	'city' => $row["province"].$row["city"],
+	'dl_num' => $dl_num
     );
 }
 echo json_encode($sayList);

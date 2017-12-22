@@ -32,17 +32,11 @@ return false;
 </head>
 <body>
 <?php
-if (isset($_REQUEST["action"])){
-$action=$_REQUEST["action"];
-}else{
-$action="";
-}
+$action = isset($_POST['action'])?$_GET['action']:"";
+$id = isset($_GET['id'])?$_GET['id']:0;
+checkid($id,1);
+
 $FoundErr=0;
-$id=trim($_REQUEST["id"]);
-if ($id=="") {
-	$FoundErr=1;
-	$errmsg="<li>参数不足！</li>";
-}else{
 	$sql="select * from zzcms_user where id='$id'";
 	$rs=query($sql);
 	$row=num_rows($rs);
@@ -53,42 +47,10 @@ if ($id=="") {
 		$row=fetch_array($rs);
 		if ($action=="modify") {
 		checkadminisdo("userreg");
-			$usersf=trim($_POST["usersf"]);
-			$password=trim($_POST["password"]);
-			$sex=trim($_POST["sex"]);
-			$email=trim($_POST["email"]);
-			$homepage=trim($_POST["homepage"]);	
-			$comane=trim($_POST["comane"]);
-			$oldcomane=trim($_POST["oldcomane"]);
-			$gsjj=stripfxg(trim($_POST["gsjj"]));
-			$img=trim($_POST["img"]);
-			$oldimg=trim($_POST["oldimg"]);
-			$flv=trim($_POST["flv"]);
 			$b=@trim($_POST["b"]);//有未设值的情况
 			$s=@trim($_POST["s"]);//有未设值的情况
-			$address=trim($_POST["address"]);
-			$somane=trim($_POST["somane"]);
+			$qqid = isset($_POST['qqid'])?$_POST['qqid'][0]:0;
 		
-			$phone=trim($_POST["phone"]);
-			$mobile=trim($_POST["mobile"]);
-			$fox=trim($_POST["fox"]);
-			$qq=trim($_POST["qq"]);
-			$oldqq=trim($_POST["oldqq"]);
-			if(!empty($_POST['qqid'])){
-			$qqid=$_POST['qqid'][0];
-			}else{
-			$qqid=0;
-			}
-			$passed=trim($_POST["passed"]);
-			$renzheng=trim($_POST["renzheng"]);
-			$oldrenzheng=trim($_POST["oldrenzheng"]);
-			$lockuser=trim($_POST["lockuser"]);
-			$groupid=trim($_POST["groupid"]);
-			$oldgroupid=trim($_POST["oldgroupid"]);
-			$totleRMB=trim($_POST["totleRMB"]);
-			$startdate=trim($_POST["startdate"]);
-			$enddate=trim($_POST["enddate"]);
-			$elite=trim($_POST["elite"]);
 			if ($elite==""){
 			$elite=0;
 			}elseif($elite>255){
@@ -96,11 +58,8 @@ if ($id=="") {
 			}elseif ($elite<0){
 			$elite=0;
 			}
+			checkid($elite,1);
 			
-			if ($lockuser=="") {
-				$FoundErr=1;
-				$errmsg=$errmsg . "<li>用户状态不能为空！</li>";
-			}
 			if ($FoundErr==0){
 			query("update zzcms_user set usersf='$usersf',sex='$sex',email='$email',homepage='$homepage',comane='$comane',content='$gsjj' where id='$id'");
 			query("update zzcms_user set img='$img',flv='$flv',bigclassid='$b',smallclassid='$s',address='$address',somane='$somane',phone='$phone' where id='$id' ");	
@@ -141,7 +100,7 @@ if ($id=="") {
 			}
 		}
 	}
-}
+	
 if ($FoundErr==1) {
 WriteErrMsg($errmsg);
 }else{
@@ -212,7 +171,7 @@ WriteErrMsg($errmsg);
       <td align="right" class="border">所属行业类型：</td>
       <td class="border"> 
 	  <?php
-$sqln = "select * from zzcms_userclass where parentid<>'0' order by xuhao asc";
+$sqln = "select classid,classname from zzcms_userclass where parentid<>'0' order by xuhao asc";
 $rsn=query($sqln);
 ?>
 <script language = "JavaScript" type="text/JavaScript">
@@ -242,11 +201,11 @@ function changelocation(locationid){
       <select name="b" size="1" id="b" onChange="changelocation(document.myform.b.options[document.myform.b.selectedIndex].value)">
         <option value="0" selected="selected">请选择大类</option>
         <?php
-	$sqln = "select * from zzcms_userclass where  parentid='0' order by xuhao asc";
+	$sqln = "select classid,classname from zzcms_userclass where  parentid='0' order by xuhao asc";
     $rsn=query($sqln);
 	while($rown = fetch_array($rsn)){
 	?>
-        <option value="<?php echo trim($rown["classid"])?>" <?php if ($rown["classid"]==$row["bigclassid"]) { echo "selected";}?>><?php echo trim($rown["classname"])?></option>
+        <option value="<?php echo $rown["classid"]?>" <?php if ($rown["classid"]==$row["bigclassid"]) { echo "selected";}?>><?php echo $rown["classname"]?></option>
         <?php
 				}
 				?>
@@ -254,7 +213,7 @@ function changelocation(locationid){
 	  <select name="s">
       <option value="0">请选择小类</option>
       <?php
-$sqln="select * from zzcms_userclass  where parentid='" .$row["bigclassid"]."' order by xuhao asc";
+$sqln="select classid,classname from zzcms_userclass  where parentid='" .$row["bigclassid"]."' order by xuhao asc";
 $rsn=query($sqln);
 $rown= num_rows($rsn);//返回记录数
 if(!$rown){
@@ -280,7 +239,7 @@ while($rown = fetch_array($rsn)){
     <tr> 
       <td align="right" class="border">公司简介：</td>
       <td class="border">  
-	  <textarea name="gsjj" id="gsjj"><?php echo $row["content"] ?></textarea> 
+	  <textarea name="gsjj" id="gsjj"><?php echo stripfxg($row["content"]) ?></textarea> 
              <script type="text/javascript" src="/3/ckeditor/ckeditor.js"></script>
 			  <script type="text/javascript">CKEDITOR.replace('gsjj');</script>   
 			
@@ -366,7 +325,7 @@ while($rown = fetch_array($rsn)){
       <td align="right" class="border">所属用户组：</td>
       <td class="border"> <select name="groupid">
           <?php
-			$rsn=query("select * from zzcms_usergroup order by groupid asc");
+			$rsn=query("select groupid,groupname from zzcms_usergroup order by groupid asc");
 			$r=num_rows($rsn);
 			if ($r){
 			while ($r=fetch_array($rsn)){
@@ -400,7 +359,7 @@ while($rown = fetch_array($rsn)){
     </tr>
     <tr> 
       <td height="20" align="center" class="border">&nbsp;</td>
-      <td height="20" class="border"><input name="action" type="hidden" id="Action2" value="modify"> 
+      <td height="20" class="border"><input name="action" type="hidden" id="action" value="modify"> 
         <input name=Submit   type=submit id="Submit" value="保存修改结果"> <input name="id" type="hidden" id="id" value="<?php echo $row["id"]?>"></td>
     </tr>
     <tr> 

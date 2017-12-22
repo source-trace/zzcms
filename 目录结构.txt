@@ -42,6 +42,7 @@
 /js js文件存放目录
 /html 静态页存放目录
 
+/favicon.ico 地址栏左侧小图标文件
 /web.config 伪静态规则文件for iis7(万网比较常用)
 /httpd.ini  伪静态规则文件for iss6
 /.htaccess  伪静态规则文件for apache

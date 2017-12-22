@@ -33,11 +33,7 @@ if (document.form1.bigclassname.value==""){
 <body>
 <?php
 checkadminisdo("userclass");
-if (isset($_REQUEST['dowhat'])){
-$dowhat=$_REQUEST['dowhat'];
-}else{
-$dowhat="";
-}
+$dowhat=isset($_REQUEST['dowhat'])?$_REQUEST['dowhat']:'';
 switch ($dowhat){
 case "addtag";
 addtag();
@@ -49,12 +45,7 @@ default;
 showtag();
 }
 function showtag(){
-if (isset($_REQUEST['action'])){
-$action=$_REQUEST['action'];
-}else{
-$action="";
-}
-
+$action=isset($_REQUEST['action'])?$_REQUEST['action']:'';
 if ($action=="px") {
 $sql="Select * From ".$_SESSION['tablename']."";
 $rs=query($sql);
@@ -67,27 +58,22 @@ $xuhao=$_POST["xuhao".$row["bigclassid"].""];//表单名称是动态显示的，
 	   }else{
 	       $xuhao = $xuhao;
 	   }
-query("update ".$_SESSION['tablename']." set xuhao='$xuhao' where bigclassid=".$row['bigclassid']."");
+query("update ".$_SESSION['tablename']." set xuhao='$xuhao' where bigclassid='".$row['bigclassid']."'");
 }
 }
 if ($action=="del"){
 checkadminisdo("siteconfig");
 $bigclassid=trim($_REQUEST["bigclassid"]);
+checkid($bigclassid);
 if ($bigclassid<>""){
-	$sql="delete from ".$_SESSION['tablename']." where bigclassid=" .$bigclassid. " ";
+	$sql="delete from ".$_SESSION['tablename']." where bigclassid='" .$bigclassid. "' ";
 	query($sql);
 }    
 echo "<script>location.href='?'</script>";
 }
 ?>
 <div class="admintitle">类别管理</div> 
-<table width="100%" border="0" cellpadding="5" cellspacing="0">
-  <tr> 
-    <td align="center" class="border">
-      <input name="submit3" type="submit" class="buttons" onClick="javascript:location.href='?dowhat=addtag'" value="添加">
-      </td>
-  </tr>
-</table>
+<div align="center" class="center border"><input name="submit3" type="submit" class="buttons" onClick="javascript:location.href='?dowhat=addtag'" value="添加"></div>
 	<?php
 	$sql="Select * From ".$_SESSION['tablename']." order by xuhao asc";
 	$rs=query($sql);
@@ -126,12 +112,7 @@ echo "<script>location.href='?'</script>";
 }
 
 function addtag(){
-if (isset($_REQUEST['action'])){
-$action=$_REQUEST['action'];
-}else{
-$action="";
-}
-
+$action=isset($_REQUEST['action'])?$_REQUEST['action']:'';
 if ($action=="add"){
     for($i=0; $i<count($_POST['bigclassname']);$i++){
     $bigclassname=($_POST['bigclassname'][$i]);
@@ -147,11 +128,7 @@ if ($action=="add"){
     echo "<script>location.href='?'</script>";		
 }else{	
 ?>
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-  <tr> 
-    <td class="admintitle">添加类别</td>
-  </tr>
-</table>
+<div class="admintitle">添加类别</div>
 <form name="form1" method="post" action="?dowhat=addtag" onSubmit="return CheckForm();">
   <table width="100%" border="0" cellpadding="5" cellspacing="0" class="border">
     <tr> 
@@ -198,16 +175,17 @@ TemO.appendChild(newline);
 
 function modifytag(){
 $action = isset($_REQUEST['action']) ? $_REQUEST['action']:''; 
-$bigclassid = isset($_REQUEST['bigclassid']) ? $_REQUEST['bigclassid']:''; 
+$bigclassid = isset($_REQUEST['bigclassid']) ? $_REQUEST['bigclassid']:0; 
+checkid($bigclassid);
 $bigclassname = isset($_POST['bigclassname']) ? trim($_POST['bigclassname']):''; 
 $oldbigclassname = isset($_POST['oldbigclassname'])?trim($_POST['oldbigclassname']):''; 
 
-if ($bigclassid==""){
+if ($bigclassid==0){
 echo "<script>location.href='?'</script>";
 }
 
 if ($action=="modify"){
-	$sql="Select * from ".$_SESSION['tablename']." where bigclassid=" . $bigclassid."";
+	$sql="Select * from ".$_SESSION['tablename']." where bigclassid='" . $bigclassid."'";
 	$rs=query($sql);
 	$row=num_rows($rs);
 	if (!$row){
@@ -215,7 +193,7 @@ if ($action=="modify"){
 		$ErrMsg="<li>不存在！</li>";
 		WriteErrMsg($ErrMsg);
 	}else{
-	query("update ".$_SESSION['tablename']." set bigclassname='$bigclassname' where bigclassid=". $bigclassid." ");
+	query("update ".$_SESSION['tablename']." set bigclassname='$bigclassname' where bigclassid='". $bigclassid."' ");
 	if ($_SESSION['tablename']=='zzcms_adclass' && $bigclassname!=$oldbigclassname){
 	query("update zzcms_ad set bigclassname='$bigclassname' where bigclassname='$oldbigclassname' ");
 	}
@@ -223,15 +201,11 @@ if ($action=="modify"){
 	}	
 	echo "<script>location.href='?#B".$bigclassid."'</script>";
 }else{
-$sql="Select * from ".$_SESSION['tablename']." where bigclassid=".$bigclassid."";
+$sql="Select * from ".$_SESSION['tablename']." where bigclassid='".$bigclassid."'";
 $rs=query($sql);
 $row=fetch_array($rs);
 ?>
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-  <tr> 
-    <td class="admintitle">修改类别</td>
-  </tr>
-</table>
+<div class="admintitle">修改类别</div>
 <form name="form1" method="post" action="?dowhat=modifytag" onSubmit="return CheckForm();">
   <table width="100%" border="0" cellpadding="5" cellspacing="0" class="border">
     <tr> 

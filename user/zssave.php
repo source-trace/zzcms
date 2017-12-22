@@ -18,12 +18,11 @@ if (str_is_inarr(usergr_power,'zs')=="no" && $usersf=='个人'){
 echo $f_array[0];
 exit;
 }
+$page = isset($_POST['page'])?$_POST['page']:1;//返回列表页用
+checkid($page);
+$cpid = isset($_POST['cpid'])?$_POST['cpid']:'0';
+checkid($cpid,1);//允许为0
 
-if (isset($_REQUEST["page"])){ 
-$page=$_REQUEST["page"];
-}else{
-$page=1;
-}
 $bigclassid=trim($_POST["bigclassid"]);
 if (zsclass_isradio=='Yes'){
 $smallclassid=@trim($_POST["smallclassid"][0]);//加[]可同多选共用同一个JS判断函数uncheckall,加@有不加小类的情况
@@ -31,8 +30,8 @@ $smallclassid=@trim($_POST["smallclassid"][0]);//加[]可同多选共用同一�
 $smallclassid="";
 	if(!empty($_POST['smallclassid'])){
     for($i=0; $i<count($_POST['smallclassid']);$i++){
-    $smallclassid=$smallclassid.('"'.$_POST['smallclassid'][$i].'"'.',');
-	//$smallclassid=$smallclassid.($_POST['smallclassid'][$i].',');
+    //$smallclassid=$smallclassid.('"'.$_POST['smallclassid'][$i].'"'.',');//为字符串时的写法
+	$smallclassid=$smallclassid.($_POST['smallclassid'][$i].',');
     }
 	$smallclassid=substr($smallclassid,0,strlen($smallclassid)-1);//去除最后面的","
 	}
@@ -47,14 +46,11 @@ $shuxing_value="";
 	$shuxing_value=substr($shuxing_value,0,strlen($shuxing_value)-3);//去除最后面的"|||"
 	}
 $szm = isset($_POST['szm'])?$_POST['szm']:''; 
-$cp_name=$_POST["name"];
-$gnzz=$_POST["gnzz"];
-//$sm=stripfxg(trim($_POST["sm"]));
-$sm=str_replace("'","",stripfxg(trim($_POST["sm"])));
-$img=$_POST["img"];
+
+
+
 
 $flv=isset($_POST["flv"])?$_POST["flv"]:'';
-$province=$_POST["province"];
 $city=$_POST["city"];
 if ($city=='请选择城区'){
 $city='';
@@ -63,12 +59,9 @@ $xiancheng=$_POST["cityforadd"];
 if ($xiancheng=='请选择县城'){
 $xiancheng='';
 }
-$zc=$_POST["zc"];
-$yq=$_POST["yq"];
-
-$title=isset($_POST["title"])?$_POST["title"]:$cp_name;
-$keyword=isset($_POST["keyword"])?$_POST["keyword"]:$cp_name;
-$discription=isset($_POST["discription"])?$_POST["discription"]:$cp_name;
+$title=isset($_POST["title"])?$_POST["title"]:$proname;
+$keyword=isset($_POST["keyword"])?$_POST["keyword"]:$proname;
+$discription=isset($_POST["discription"])?$_POST["discription"]:$proname;
 $skin=isset($_POST["skin"])?$_POST["skin"]:'';
 $rs=query("select groupid,qq,comane,id,renzheng from zzcms_user where username='".$username."'");
 $row=fetch_array($rs);
@@ -77,16 +70,10 @@ $qq=$row["qq"];
 $comane=$row["comane"];
 $renzheng=$row["renzheng"];
 $userid=$row["id"];
-if (isset($_POST["ypid"])){
-$cpid=$_POST["ypid"];
-checkid($cpid);
-}else{
-$cpid=0;
-}
 
 //判断是不是重复信息
 if ($_REQUEST["action"]=="add" ){
-$sql="select * from zzcms_main where proname='".$cp_name."' and editor='".$username."' ";
+$sql="select id from zzcms_main where proname='".$proname."' and editor='".$username."' ";
 $rs=query($sql);
 $row=num_rows($rs);
 if ($row){
@@ -94,7 +81,7 @@ echo $f_array[1];
 exit;
 }
 }elseif($_REQUEST["action"]=="modify"){
-$sql="select * from zzcms_main where proname='".$cp_name."' and editor='".$username."' and id<>".$cpid." ";
+$sql="select id from zzcms_main where proname='".$proname."' and editor='".$username."' and id<>".$cpid." ";
 $rs=query($sql);
 $row=num_rows($rs);
 if ($row){
@@ -112,13 +99,13 @@ $TimeNum=date('Y');
 $TimeNum=$TimeNum.date("mdHis").$ranNum;
   
 if ($_POST["action"]=="add"){
-$isok=query("Insert into zzcms_main(proname,bigclasszm,smallclasszm,shuxing,szm,prouse,sm,img,flv,province,city,xiancheng,zc,yq,shuxing_value,title,keywords,description,sendtime,timefororder,editor,userid,groupid,qq,comane,renzheng,skin) values('$cp_name','$bigclassid','$smallclassid','$shuxing','$szm','$gnzz','$sm','$img','$flv','$province','$city','$xiancheng','$zc','$yq','$shuxing_value','$title','$keyword','$discription','".date('Y-m-d H:i:s')."','$TimeNum','$username','$userid','$groupid','$qq','$comane','$renzheng','$skin')") ;  
+$isok=query("Insert into zzcms_main(proname,bigclassid,smallclassid,smallclassids,shuxing,szm,prouse,sm,img,flv,province,city,xiancheng,zc,yq,shuxing_value,title,keywords,description,sendtime,timefororder,editor,userid,groupid,qq,comane,renzheng,skin) values('$proname','$bigclassid','$smallclassid','$smallclassid','$shuxing','$szm','$gnzz','$sm','$img','$flv','$province','$city','$xiancheng','$zc','$yq','$shuxing_value','$title','$keyword','$discription','".date('Y-m-d H:i:s')."','$TimeNum','$username','$userid','$groupid','$qq','$comane','$renzheng','$skin')") ;  
 $cpid=insert_id();		
 }elseif ($_POST["action"]=="modify"){
 $oldimg=trim($_POST["oldimg"]);
 $oldflv=trim($_POST["oldflv"]);
 
-$isok=query("update zzcms_main set proname='$cp_name',bigclasszm='$bigclassid',smallclasszm='$smallclassid',shuxing='$shuxing',szm='$szm',prouse='$gnzz',sm='$sm',img='$img',flv='$flv',province='$province',city='$city',xiancheng='$xiancheng',zc='$zc',yq='$yq',shuxing_value='$shuxing_value',title='$title',keywords='$keyword',description='$discription',sendtime='".date('Y-m-d H:i:s')."',timefororder='$TimeNum',editor='$username',userid='$userid',groupid='$groupid',qq='$qq',comane='$comane',renzheng='$renzheng',skin='$skin',passed=0 where id='$cpid'");
+$isok=query("update zzcms_main set proname='$proname',bigclassid='$bigclassid',smallclassid='$smallclassid',smallclassids='$smallclassid',shuxing='$shuxing',szm='$szm',prouse='$gnzz',sm='$sm',img='$img',flv='$flv',province='$province',city='$city',xiancheng='$xiancheng',zc='$zc',yq='$yq',shuxing_value='$shuxing_value',title='$title',keywords='$keyword',description='$discription',sendtime='".date('Y-m-d H:i:s')."',timefororder='$TimeNum',editor='$username',userid='$userid',groupid='$groupid',qq='$qq',comane='$comane',renzheng='$renzheng',skin='$skin',passed=0 where id='$cpid'");
 
 	if ($oldimg<>$img && $oldimg<>"image/nopic.gif") {
 	//deloldimg
@@ -175,7 +162,7 @@ include("left.php");
     <td class="border3"><table width="100%" border="0" cellspacing="0" cellpadding="3">
       <tr bgcolor="#FFFFFF">
         <td width="25%" align="right" bgcolor="#FFFFFF"><strong><?php echo $f_array[4]?></strong></td>
-        <td width="75%"><?php echo $cp_name?></td>
+        <td width="75%"><?php echo $proname?></td>
       </tr>
       
       <tr bgcolor="#FFFFFF">

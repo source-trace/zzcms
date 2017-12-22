@@ -7,42 +7,24 @@ include("admin.php");
 <link href="style.css" rel="stylesheet" type="text/css">
 <title></title>
 <?php
-if (isset($_REQUEST['action'])){
-$action=$_REQUEST['action'];
-}else{
-$action="";
-}
+$action = isset($_REQUEST['action'])?$_REQUEST['action']:"";
 if ($action=="add") {
 checkadminisdo("label");
-$title=nostr(trim($_POST["title"]));
-$title_old=trim($_POST["title_old"]);
-$bigclassid=trim($_POST["bigclassid"]);
-$smallclassid=trim($_POST["smallclassid"]);
+$pic = isset($_POST['pic'])?$_POST['pic'][0]:0;
+$elite = isset($_POST['elite'])?$_POST['elite'][0]:0;
 
-if(!empty($_POST['pic'])){
-    $pic=$_POST['pic'][0];
-}else{
-$pic=0;
-}
+checkstr($numbers,'num','调用记录数');
+checkstr($titlenum,'num','标题长度');
+checkstr($cnum,'num','内容长度');
+checkstr($column,'num','列数');
 
-if(!empty($_POST['elite'])){
-    $elite=$_POST['elite'][0];
-}else{
-$elite=0;
-}
-$typeid=trim($_POST["typeid"]);
-$numbers=trim($_POST["numbers"]);
-$orderby=trim($_POST["orderby"]);
-$titlenum=trim($_POST["titlenum"]);
-$cnum=trim($_POST["cnum"]);
-$row=trim($_POST["row"]);
-$start=stripfxg($_POST["start"]);
-$mids=stripfxg($_POST["mids"]);
-$ends=stripfxg($_POST["ends"]);
+$start=stripfxg($_POST["start"],true);
+$mids=stripfxg($_POST["mids"],true);
+$ends=stripfxg($_POST["ends"],true);
 
 $f="../template/".siteskin."/label/askshow/".$title.".txt";
 $fp=fopen($f,"w+");//fopen()的其它开关请参看相关函数
-$str=$title . "|||" .$bigclassid . "|||".$smallclassid . "|||".$pic ."|||".$elite."|||".$typeid . "|||" . $numbers . "|||" . $orderby ."|||" . $titlenum ."|||" . $cnum ."|||" . $row . "|||" . $start . "|||" . $mids . "|||" . $ends;
+$str=$title . "|||" .$bigclassid . "|||".$smallclassid . "|||".$pic ."|||".$elite."|||".$typeid . "|||" . $numbers . "|||" . $orderby ."|||" . $titlenum ."|||" . $cnum ."|||" . $column . "|||" . $start . "|||" . $mids . "|||" . $ends;
 fputs($fp,$str);
 fclose($fp);
 $title==$title_old ?$msg='修改成功':$msg='添加成功';
@@ -106,30 +88,7 @@ if (document.myform.bigclassid.value==""){
     alert("请选择大类别！");
 	document.myform.bigclassid.focus();
 	return false;
-  } 
-//定义正则表达式部分
-var strP=/^\d+$/;
-if(!strP.test(document.myform.numbers.value)) {
-alert("只能填数字！"); 
-document.myform.numbers.focus(); 
-return false; 
-} 
-
-if(!strP.test(document.myform.titlenum.value)) {
-alert("只能填数字！"); 
-document.myform.titlenum.focus(); 
-return false; 
-}  
-if(!strP.test(document.myform.cnum.value)) {
-alert("只能填数字！"); 
-document.myform.cnum.focus(); 
-return false; 
-} 
-if(!strP.test(document.myform.row.value)) {
-alert("只能填数字！"); 
-document.myform.row.focus(); 
-return false; 
-}  
+  }  
 }  
 </script>
 </head>
@@ -168,12 +127,8 @@ closedir($dir);
 //读取现有标签中的内容
 if ($labelname!=''){
 $fp="../template/".siteskin."/label/askshow/".$labelname;
-$f=fopen($fp,"r+");
-$fcontent="";
-while (!feof($f))
-{
-    $fcontent=$fcontent.fgets($f);
-}
+$f=fopen($fp,"r");
+$fcontent=fread($f,filesize($fp));
 fclose($f);
 $fcontent=removeBOM($fcontent);//去除BOM信息，使修改时不用再重写标签名
 $f=explode("|||",$fcontent) ;
@@ -187,25 +142,10 @@ $numbers=$f[6];
 $orderby=$f[7];
 $titlenum=$f[8];
 $cnum=$f[9];
-$row=$f[10];
+$column=$f[10];
 $start=$f[11];
 $mids=$f[12];
 $ends=$f[13];	
-}else{
-$title="";
-$bigclassid="";
-$smallclassid="";
-$pic="";
-$elite="";
-$typeid=0;
-$numbers="";
-$orderby="";
-$titlenum="";
-$cnum="";
-$row="";
-$start="";
-$mids="";
-$ends="";
 } 
 	   ?>
 	   </div>      </td>
@@ -275,7 +215,7 @@ $ends="";
     </tr>
     <tr> 
       <td align="right" class="border" >列数：</td>
-      <td class="border" > <input name="row" type="text" id="row" value="<?php echo $row?>" size="20" maxlength="255">
+      <td class="border" > <input name="column" type="text" id="column" value="<?php echo $column?>" size="20" maxlength="255">
         （分几列显示）</td>
     </tr>
     <tr> 

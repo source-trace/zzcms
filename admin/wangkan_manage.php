@@ -11,7 +11,12 @@ include("../inc/fy.php");
 <?php
 checkadminisdo("wangkan");
 $action=isset($_REQUEST["action"])?$_REQUEST["action"]:'';
-$page=isset($_GET["page"])?$_GET["page"]:1;
+if( isset($_REQUEST["page"]) && $_REQUEST["page"]!="") {
+    $page=$_REQUEST['page'];
+	checkid($page,0);
+}else{
+    $page=1;
+}
 $shenhe=isset($_REQUEST["shenhe"])?$_REQUEST["shenhe"]:'';
 
 $keyword=isset($_REQUEST["keyword"])?$_REQUEST["keyword"]:'';
@@ -104,7 +109,7 @@ if ( $b<>"" ) {
    $sql2=$sql2." and bigclassid=".$b."";
 }
 
-$rs = query($sql.$sql2,$conn); 
+$rs =query($sql.$sql2); 
 $row = fetch_array($rs);
 $totlenum = $row['total']; 
 $totlepage=ceil($totlenum/$page_size);
@@ -112,7 +117,7 @@ $totlepage=ceil($totlenum/$page_size);
 $sql="select * from zzcms_wangkan where id<>0 ";
 $sql=$sql.$sql2;
 $sql=$sql . " order by id desc limit $offset,$page_size";
-$rs = query($sql,$conn); 
+$rs = query($sql); 
 if(!$totlenum){
 echo "暂无信息";
 }else{

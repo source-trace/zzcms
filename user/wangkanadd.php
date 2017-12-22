@@ -51,7 +51,7 @@ include("checkaddinfo.php");
             <td width="85%" class="border2"> <select name="bigclassid" id="bigclassid" class="biaodan">
                 <option value="" selected="selected"><?php echo $f_array[4]?></option>
                 <?php  
-		$sql="select * from zzcms_wangkanclass";
+		$sql="select bigclassid,bigclassname from zzcms_wangkanclass";
 		$rs=query($sql);
 		while($row= fetch_array($rs)){
 			?>
@@ -87,7 +87,6 @@ include("checkaddinfo.php");
 </div>
 </div>
 <?php
-
 unset ($f_array);
 ?>
 </body>

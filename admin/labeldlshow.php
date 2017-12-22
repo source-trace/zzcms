@@ -7,32 +7,21 @@ include("admin.php");
 <link href="style.css" rel="stylesheet" type="text/css">
 <title></title>
 <?php
-if (isset($_REQUEST['action'])){
-$action=$_REQUEST['action'];
-}else{
-$action="";
-}
+$action = isset($_REQUEST['action'])?$_REQUEST['action']:"";
 if ($action=="add") {
 checkadminisdo("label");
 $title=nostr(trim($_POST["title"]));
-$title_old=trim($_POST["title_old"]);
-$bigclassid=trim($_POST["bigclassid"]);
-if(!empty($_POST['saver'])){
-$saver=$_POST['saver'][0];
-}else{
-$saver=0;
-}
-$numbers=trim($_POST["numbers"]);
-$orderby=trim($_POST["orderby"]);
-$titlenum=trim($_POST["titlenum"]);
-$row=trim($_POST["row"]);
-$start=stripfxg($_POST["start"]);
-$mids=stripfxg($_POST["mids"]);
-$ends=stripfxg($_POST["ends"]);
+$saver = isset($_POST['saver'])?$_POST['saver'][0]:0;
+checkstr($numbers,'num','调用记录数');
+checkstr($titlenum,'num','标题长度');
+checkstr($column,'num','列数');
+$start=stripfxg($_POST["start"],true);
+$mids=stripfxg($_POST["mids"],true);
+$ends=stripfxg($_POST["ends"],true);
 
 $f="../template/".siteskin."/label/dlshow/".$title.".txt";
 $fp=fopen($f,"w+");//fopen()的其它开关请参看相关函数
-$str=$title . "|||" .$bigclassid . "|||" .$saver."|||" . $numbers . "|||" . $orderby ."|||" . $titlenum ."|||" . $row . "|||" . $start . "|||" . $mids . "|||" . $ends;
+$str=$title . "|||" .$bigclassid . "|||" .$saver."|||" . $numbers . "|||" . $orderby ."|||" . $titlenum ."|||" . $column . "|||" . $start . "|||" . $mids . "|||" . $ends;
 fputs($fp,$str);
 fclose($fp);
 $title==$title_old ?$msg='修改成功':$msg='添加成功';
@@ -66,25 +55,6 @@ if (document.myform.BigClassID.value==""){
 	document.myform.BigClassID.focus();
 	return false;
   } 
-//定义正则表达式部分
-var strP=/^\d+$/;
-if(!strP.test(document.myform.numbers.value)) {
-alert("只能填数字！"); 
-document.myform.numbers.focus(); 
-return false; 
-} 
-
-if(!strP.test(document.myform.titlenum.value)) {
-alert("只能填数字！"); 
-document.myform.titlenum.focus(); 
-return false; 
-}  
-
-if(!strP.test(document.myform.row.value)) {
-alert("只能填数字！"); 
-document.myform.row.focus(); 
-return false; 
-}  
 }  
 </script>
 </head>
@@ -123,12 +93,8 @@ closedir($dir);
 //读取现有标签中的内容
 if (isset($_REQUEST["labelname"])){
 $fp="../template/".siteskin."/label/dlshow/".$labelname;
-$f=fopen($fp,"r+");
-$fcontent="";
-while (!feof($f))
-{
-    $fcontent=$fcontent.fgets($f);
-}
+$f=fopen($fp,"r");
+$fcontent=fread($f,filesize($fp));
 fclose($f);
 $fcontent=removeBOM($fcontent);//去除BOM信息，使修改时不用再重写标签名
 $f=explode("|||",$fcontent) ;
@@ -138,21 +104,10 @@ $saver=$f[2];
 $numbers=$f[3];
 $orderby=$f[4];
 $titlenum=$f[5];
-$row=$f[6];
+$column=$f[6];
 $start=$f[7];
 $mids=$f[8];
 $ends=$f[9];	
-}else{
-$title="";
-$bigclassid="";
-$saver="";
-$numbers="";
-$orderby="";
-$titlenum="";
-$row="";
-$start="";
-$mids="";
-$ends="";
 } 
 	   ?>
 	</div>   
@@ -167,13 +122,13 @@ $ends="";
  <tr> 
       <td align="right" class="border" >调用内容：</td>
       <td class="border" > <select name="bigclassid">
-          <option value="empty" selected>不指定大类</option>
+          <option value="0" selected>不指定大类</option>
           <?php
-       $sql = "select * from zzcms_zsclass where parentid='A' order by xuhao asc";
+       $sql = "select * from zzcms_zsclass where parentid=0 order by xuhao asc";
        $rs=query($sql);
 		   while($r=fetch_array($rs)){
 			?>
-          <option value="<?php echo $r["classzm"]?>" <?php if ($r["classzm"]==$bigclassid) { echo "selected";}?>> 
+          <option value="<?php echo $r["classid"]?>" <?php if ($r["classid"]==$bigclassid) { echo "selected";}?>> 
          <?php echo trim($r["classname"])?></option>
           <?php   
     	     }	
@@ -199,7 +154,7 @@ $ends="";
     </tr>
     <tr> 
       <td align="right" class="border" >列数：</td>
-      <td class="border" > <input name="row" type="text" id="row" value="<?php echo $row?>" size="20" maxlength="255">
+      <td class="border" > <input name="column" type="text" id="column" value="<?php echo $column?>" size="20" maxlength="255">
         （分几列显示）</td>
     </tr>
     <tr> 

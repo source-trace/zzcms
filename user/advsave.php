@@ -27,7 +27,7 @@ $editor=trim($_POST["editor"]);
 
 if ($_POST["action"]=="add"){
 $isok=query("Insert into zzcms_ztad(classname,title,link,img,editor,passed) values('$classname','$title','$link','$img','$editor',1)");  
-$id=insert_id();		
+$id=mysqli_insert_id($conn);		
 }elseif ($_POST["action"]=="modify"){
 $id=$_POST["id"];
 $isok=query("update zzcms_ztad set classname='$classname',title='$title',link='$link',img='$img',editor='$editor',passed=1 where id='$id'");	
